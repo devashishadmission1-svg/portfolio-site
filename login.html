@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restricted Access</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="dragon-container">
+        <svg id="dragon-svg" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
+            <g id="dragon-screen"></g>
+        </svg>
+    </div>
+
+    <div class="login-container fade-in-up">
+        <h2 style="margin-bottom: 2rem;">Authenticating...</h2>
+        <form id="login-form">
+            <input type="password" id="passphrase" class="minimal-input" placeholder="Passphrase" autofocus
+                autocomplete="off">
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Enter</button>
+        </form>
+        <p id="error-msg" style="color: var(--primary-color); margin-top: 1rem; opacity: 0; transition: opacity 0.3s;">
+            Access Denied</p>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script>
+        const form = document.getElementById('login-form');
+        const input = document.getElementById('passphrase');
+        const errorMsg = document.getElementById('error-msg');
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const val = input.value;
+
+            if (val === "tylerdurdenisnotreal") {
+                // Success
+                sessionStorage.setItem('isAdmin', 'true');
+                window.location.href = 'dashboard.html';
+            } else {
+                // Fail
+                errorMsg.style.opacity = '1';
+                input.style.borderColor = 'var(--primary-color)';
+                input.value = '';
+                setTimeout(() => {
+                    errorMsg.style.opacity = '0';
+                    input.style.borderColor = 'var(--border-color)';
+                }, 2000);
+            }
+        });
+    </script>
+</body>
+
+</html>

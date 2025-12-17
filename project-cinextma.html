@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cinextma | Movie AI</title>
+    <meta name="description" content="An AI-powered movie recommendation chatbot.">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .chat-container {
+            max-width: 600px;
+            margin: 2rem auto;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            height: 500px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 0.8rem 1rem;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        .bot-message {
+            align-self: flex-start;
+            background: var(--light-gray);
+            color: var(--intro-text);
+            border-bottom-left-radius: 2px;
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background: var(--primary-color);
+            color: white;
+            border-bottom-right-radius: 2px;
+        }
+
+        .chat-input-area {
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.8);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Scrollbar */
+        .chat-messages::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar fade-in">
+        <div class="container">
+            <a href="index.html" class="logo">Port.</a>
+            <ul class="nav-links">
+                <li><a href="index.html#projects">Work</a></li>
+                <li><a href="ai-workshop.html" class="btn-res">AI Workshop</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <header class="hero-section" style="min-height: 20vh;">
+        <div class="container">
+            <h1 class="hero-title fade-in-up">Cinextma</h1>
+            <p class="hero-subtitle fade-in-up delay-10">Your personal movie guide. Just ask.</p>
+        </div>
+    </header>
+
+    <section class="section">
+        <div class="container animate-on-scroll">
+            <div class="chat-container">
+                <div id="messages" class="chat-messages">
+                    <div class="message bot-message">Hello! I'm Cinextma. Tell me what kind of movie you're in the mood
+                        for (e.g., "scary", "funny", "romantic", "80s").</div>
+                </div>
+                <form id="chat-form" class="chat-input-area">
+                    <input type="text" id="user-input" class="minimal-input" placeholder="I want to watch..." required
+                        style="margin-bottom: 0;">
+                    <button type="submit" class="btn btn-primary" style="padding: 0 1.5rem;">Send</button>
+                </form>
+            </div>
+
+
+        </div>
+    </section>
+
+    <p>&copy; Designed and created by Devashish Pathak.</p>
+    </div>
+    </footer>
+
+    <!-- Dragon Background -->
+    <div class="dragon-container">
+        <svg id="dragon-svg" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
+            <g id="dragon-screen"></g>
+        </svg>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const messages = document.getElementById('messages');
+            const form = document.getElementById('chat-form');
+            const input = document.getElementById('user-input');
+
+            // Simple "Database"
+            const movies = {
+                horror: ["The Shining", "Hereditary", "A Quiet Place", "Get Out", "The Conjuring", "It Follows", "The Witch", "Sinister"],
+                comedy: ["Superbad", "The Grand Budapest Hotel", "Booksmart", "Palm Springs", "Monty Python and the Holy Grail", "Ferris Bueller's Day Off", "Game Night"],
+                action: ["Mad Max: Fury Road", "John Wick", "Die Hard", "The Dark Knight", "Inception", "Gladiator", "The Matrix", "Terminator 2"],
+                romance: ["La La Land", "The Notebook", "Pride and Prejudice", "Before Sunrise", "Eternal Sunshine", "Casablanca", "When Harry Met Sally"],
+                scifi: ["Blade Runner 2049", "Interstellar", "Dune", "Ex Machina", "Arrival", "2001: A Space Odyssey", "The Martian"],
+                drama: ["The Godfather", "Schindler's List", "Parasite", "Whiplash", "The Shawshank Redemption", "Fight Club", "Good Will Hunting"]
+            };
+
+            const keywords = {
+                horror: ['scary', 'horror', 'spooky', 'ghost', 'fear', 'creepy'],
+                comedy: ['funny', 'laugh', 'comedy', 'humor', 'fun', 'hilarious'],
+                action: ['action', 'fight', 'explosion', 'thrill', 'fast', 'adventure'],
+                romance: ['love', 'romantic', 'romance', 'couple', 'heart', 'date'],
+                scifi: ['space', 'future', 'robot', 'alien', 'sci-fi', 'technology', 'science'],
+                drama: ['sad', 'drama', 'serious', 'cry', 'emotional', 'intense']
+            };
+
+            // State
+            let lastGenre = null;
+
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const text = input.value.trim();
+                if (!text) return;
+
+                addMessage(text, 'user');
+                input.value = '';
+
+                // Simulate delay
+                setTimeout(() => {
+                    const response = getRecommendation(text);
+                    addMessage(response, 'bot');
+                }, 600);
+            });
+
+            function addMessage(text, sender) {
+                const div = document.createElement('div');
+                div.className = `message ${sender}-message`;
+                div.textContent = text;
+                messages.appendChild(div);
+                messages.scrollTop = messages.scrollHeight;
+            }
+
+            function getRecommendation(text) {
+                const lower = text.toLowerCase();
+                let matchedGenre = null;
+
+                // 1. Check for specific genre keywords
+                for (const [genre, words] of Object.entries(keywords)) {
+                    if (words.some(w => lower.includes(w))) {
+                        matchedGenre = genre;
+                        break;
+                    }
+                }
+
+                // 2. Handle follow-up inputs ("another", "more", "else", "again")
+                if (!matchedGenre && lastGenre) {
+                    if (lower.includes('another') || lower.includes('more') || lower.includes('else') || lower.includes('recommend') || lower.includes('one') || lower.includes('yes') || lower.includes('okay')) {
+                        matchedGenre = lastGenre;
+                    }
+                }
+
+                if (matchedGenre) {
+                    lastGenre = matchedGenre; // Update context
+                    const list = movies[matchedGenre];
+                    const randomMovie = list[Math.floor(Math.random() * list.length)];
+
+                    // Varied responses
+                    const responses = [
+                        `How about "${randomMovie}"? It's a great ${matchedGenre} film.`,
+                        `You might enjoy "${randomMovie}".`,
+                        `I'd recommend "${randomMovie}".`,
+                        `Check out "${randomMovie}"!`
+                    ];
+                    return responses[Math.floor(Math.random() * responses.length)];
+                } else {
+                    return "I'm not sure what kind of movie you're looking for. You can ask for mystery, comedy, sci-fi, or just say 'surprise me' (actually I don't support that yet, try a genre!).";
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
