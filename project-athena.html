@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Athena | 4-Player Chess AI</title>
+    <meta name="description" content="A Deep Reinforcement Learning engine for 4-player chess.">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Chess Board Styles */
+        .board-container {
+            display: flex;
+            justify-content: center;
+            margin: 2rem 0;
+            perspective: 1000px;
+        }
+
+        .chess-board {
+            display: grid;
+            grid-template-columns: repeat(14, 1fr);
+            grid-template-rows: repeat(14, 1fr);
+            width: 100%;
+            max-width: 600px;
+            aspect-ratio: 1;
+            background: #2a2a2a;
+            border: 5px solid #444;
+            transform: rotateX(20deg);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .cell {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            /* Bigger pieces */
+            position: relative;
+            cursor: pointer;
+        }
+
+        /* Flying Piece for Animation */
+        .flying-piece {
+            position: absolute;
+            font-size: 2.5rem;
+            z-index: 100;
+            pointer-events: none;
+            transition: all 0.5s ease-in-out;
+            text-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Color Schemes */
+        .white-cell {
+            background-color: #f0d9b5;
+            color: black;
+        }
+
+        .black-cell {
+            background-color: #b58863;
+            color: black;
+        }
+
+        .empty-cell {
+            background-color: transparent;
+            border: none;
+        }
+
+        /* Piece Colors */
+        .piece-red {
+            color: #d32f2f;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .piece-blue {
+            color: #1976d2;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .piece-yellow {
+            color: #fbc02d;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .piece-green {
+            color: #388e3c;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .cell {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar fade-in">
+        <div class="container">
+            <a href="index.html" class="logo">Port.</a>
+            <ul class="nav-links">
+                <li><a href="index.html#projects">Work</a></li>
+                <li><a href="ai-workshop.html" class="btn-res">AI Workshop</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <header class="hero-section" style="min-height: 40vh;">
+        <div class="container">
+            <h1 class="hero-title fade-in-up">Athena</h1>
+            <p class="hero-subtitle fade-in-up delay-10">4-Player Chess Engine powered by Deep Reinforcement Learning.
+            </p>
+        </div>
+    </header>
+
+    <section class="section">
+        <div class="container">
+            <div class="project-details" style="text-align: center; margin-bottom: 2rem;">
+                <p>Athena is an AI engine designed to master the chaotic complexity of 4-player chess. This interface
+                    visualizes the board state.</p>
+                <div class="tags" style="justify-content: center; margin-top: 1rem;">
+                    <li>Python</li>
+                    <li>Reinforcement Learning</li>
+                    <li>Bitboards</li>
+                </div>
+                <br>
+                <button id="start-game" class="btn btn-primary">Start New Game</button>
+            </div>
+
+            <!-- Board Visualization -->
+            <div class="board-container animate-on-scroll">
+                <div id="chessboard" class="chess-board">
+                    <!-- JS will populate grid -->
+                </div>
+            </div>
+
+
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; Designed and created by Devashish Pathak.</p>
+        </div>
+    </footer>
+
+    <!-- Dragon Background -->
+    <div class="dragon-container">
+        <svg id="dragon-svg" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
+            <g id="dragon-screen"></g>
+        </svg>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const boardEl = document.getElementById('chessboard');
+            const startBtn = document.getElementById('start-game');
+            const size = 14;
+
+            // Game State
+            let boardState = [];
+            let currentPlayer = 0; // 0: Red, 1: Blue, 2: Yellow, 3: Green
+            let colors = ['red', 'blue', 'yellow', 'green'];
+            let isGameActive = false;
+            let selectedPiece = null;
+            let isAnimating = false;
+
+            function initBoard() {
+                boardState = Array(size).fill(null).map(() => Array(size).fill(null));
+                const place = (r, c, type, color) => {
+                    const icons = { 'P': '&#9817;', 'R': '&#9814;', 'N': '&#9816;', 'B': '&#9815;', 'Q': '&#9813;', 'K': '&#9812;' };
+                    boardState[r][c] = { type, color, icon: icons[type] };
+                };
+
+                // Setup (Same as before)
+                // Red (Top)
+                for (let c = 3; c <= 10; c++) place(1, c, 'P', 'red');
+                place(0, 3, 'R', 'red'); place(0, 10, 'R', 'red');
+                place(0, 4, 'N', 'red'); place(0, 9, 'N', 'red');
+                place(0, 5, 'B', 'red'); place(0, 8, 'B', 'red');
+                place(0, 6, 'K', 'red'); place(0, 7, 'Q', 'red');
+                // Yellow (Bottom - User)
+                for (let c = 3; c <= 10; c++) place(12, c, 'P', 'yellow');
+                place(13, 3, 'R', 'yellow'); place(13, 10, 'R', 'yellow');
+                place(13, 4, 'N', 'yellow'); place(13, 9, 'N', 'yellow');
+                place(13, 5, 'B', 'yellow'); place(13, 8, 'B', 'yellow');
+                place(13, 6, 'K', 'yellow'); place(13, 7, 'Q', 'yellow');
+                // Blue (Left)
+                for (let r = 3; r <= 10; r++) place(r, 1, 'P', 'blue');
+                place(3, 0, 'R', 'blue'); place(10, 0, 'R', 'blue');
+                place(4, 0, 'N', 'blue'); place(9, 0, 'N', 'blue');
+                place(5, 0, 'B', 'blue'); place(8, 0, 'B', 'blue');
+                place(6, 0, 'K', 'blue'); place(7, 0, 'Q', 'blue');
+                // Green (Right)
+                for (let r = 3; r <= 10; r++) place(r, 12, 'P', 'green');
+                place(3, 13, 'R', 'green'); place(10, 13, 'R', 'green');
+                place(4, 13, 'N', 'green'); place(9, 13, 'N', 'green');
+                place(5, 13, 'B', 'green'); place(8, 13, 'B', 'green');
+                place(6, 13, 'K', 'green'); place(7, 13, 'Q', 'green');
+
+                renderBoard();
+            }
+
+            function isValidSquare(r, c) {
+                if (r < 0 || r >= size || c < 0 || c >= size) return false;
+                const isTopLeft = r < 3 && c < 3;
+                const isTopRight = r < 3 && c > 10;
+                const isBottomLeft = r > 10 && c < 3;
+                const isBottomRight = r > 10 && c > 10;
+                return !(isTopLeft || isTopRight || isBottomLeft || isBottomRight);
+            }
+
+            function renderBoard() {
+                boardEl.innerHTML = '';
+                for (let r = 0; r < size; r++) {
+                    for (let c = 0; c < size; c++) {
+                        const div = document.createElement('div');
+                        div.className = 'cell';
+                        div.id = `cell-${r}-${c}`; // ID for animation target
+
+                        if (isValidSquare(r, c)) {
+                            if ((r + c) % 2 === 0) div.classList.add('white-cell');
+                            else div.classList.add('black-cell');
+
+                            const piece = boardState[r][c];
+                            if (piece) {
+                                div.innerHTML = piece.icon;
+                                div.classList.add(`piece-${piece.color}`);
+                            }
+
+                            div.addEventListener('click', () => handleCellClick(r, c));
+
+                            if (selectedPiece && selectedPiece.r === r && selectedPiece.c === c) {
+                                div.style.backgroundColor = 'rgba(255, 255, 0, 0.5)';
+                            }
+                        } else {
+                            div.classList.add('empty-cell');
+                        }
+                        boardEl.appendChild(div);
+                    }
+                }
+            }
+
+            function handleCellClick(r, c) {
+                // Human is Yellow (Player 2)
+                if (!isGameActive || currentPlayer !== 2 || isAnimating) return;
+
+                const clickedPiece = boardState[r][c];
+
+                if (clickedPiece && clickedPiece.color === 'yellow') {
+                    selectedPiece = { r, c };
+                    renderBoard();
+                    return;
+                }
+
+                if (selectedPiece) {
+                    // Valid move logic (simplified)
+                    if (isValidSquare(r, c) && (!clickedPiece || clickedPiece.color !== 'yellow')) {
+                        animateMove(selectedPiece.r, selectedPiece.c, r, c, () => {
+                            movePiece(selectedPiece.r, selectedPiece.c, r, c);
+                            selectedPiece = null;
+                            renderBoard();
+                            nextTurn();
+                        });
+                    }
+                }
+            }
+
+            function movePiece(fromR, fromC, toR, toC) {
+                boardState[toR][toC] = boardState[fromR][fromC];
+                boardState[fromR][fromC] = null;
+            }
+
+            function animateMove(fromR, fromC, toR, toC, callback) {
+                isAnimating = true;
+                const fromCell = document.getElementById(`cell-${fromR}-${fromC}`);
+                const toCell = document.getElementById(`cell-${toR}-${toC}`);
+
+                // Create flying piece
+                const piece = boardState[fromR][fromC];
+                const flyer = document.createElement('div');
+                flyer.innerHTML = piece.icon;
+                flyer.className = `flying-piece piece-${piece.color}`;
+
+                // Position
+                const fromRect = fromCell.getBoundingClientRect();
+                const toRect = toCell.getBoundingClientRect();
+
+                flyer.style.left = fromRect.left + 'px';
+                flyer.style.top = fromRect.top + 'px';
+                flyer.style.width = fromRect.width + 'px';
+                flyer.style.height = fromRect.height + 'px';
+                flyer.style.display = 'flex';
+                flyer.style.alignItems = 'center';
+                flyer.style.justifyContent = 'center';
+
+                document.body.appendChild(flyer);
+
+                // Hide original piece temporarily
+                fromCell.innerHTML = '';
+
+                // Trigger reflow
+                flyer.offsetHeight;
+
+                // Animate
+                flyer.style.left = toRect.left + 'px';
+                flyer.style.top = toRect.top + 'px';
+
+                setTimeout(() => {
+                    flyer.remove();
+                    isAnimating = false;
+                    callback();
+                }, 500); // 0.5s duration matches CSS
+            }
+
+            function nextTurn() {
+                currentPlayer = (currentPlayer + 1) % 4;
+                console.log(`Turn: ${colors[currentPlayer]}`);
+
+                if (currentPlayer !== 2) { // If not Human (Yellow)
+                    setTimeout(aiMove, 800);
+                }
+            }
+
+            function aiMove() {
+                const color = colors[currentPlayer];
+                const myPieces = [];
+                for (let r = 0; r < size; r++) {
+                    for (let c = 0; c < size; c++) {
+                        if (boardState[r][c] && boardState[r][c].color === color) {
+                            myPieces.push({ r, c });
+                        }
+                    }
+                }
+
+                if (myPieces.length === 0) { nextTurn(); return; }
+
+                let moved = false;
+                let attempts = 0;
+                while (!moved && attempts < 100) {
+                    const p = myPieces[Math.floor(Math.random() * myPieces.length)];
+                    const dr = Math.floor(Math.random() * 3) - 1;
+                    const dc = Math.floor(Math.random() * 3) - 1;
+
+                    if (dr === 0 && dc === 0) continue;
+
+                    const targetR = p.r + dr;
+                    const targetC = p.c + dc;
+
+                    if (isValidSquare(targetR, targetC)) {
+                        const target = boardState[targetR][targetC];
+                        if (!target || target.color !== color) {
+                            // Check valid move logic more strictly? Nah, standard demo.
+                            // But we must animate!
+                            animateMove(p.r, p.c, targetR, targetC, () => {
+                                movePiece(p.r, p.c, targetR, targetC);
+                                renderBoard();
+                                nextTurn();
+                            });
+                            moved = true;
+                        }
+                    }
+                    attempts++;
+                }
+
+                // If stuck, skip turn (prevent infinite loop)
+                if (!moved) nextTurn();
+            }
+
+            startBtn.addEventListener('click', () => {
+                initBoard();
+                isGameActive = true;
+                currentPlayer = 0; // Red starts
+                startBtn.textContent = "Restart Game";
+
+                // Start AI sequence (Red -> Blue -> Human -> Green)
+                setTimeout(aiMove, 1000);
+            });
+
+            initBoard();
+        });
+    </script>
+</body>
+
+</html>
