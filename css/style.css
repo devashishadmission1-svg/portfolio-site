@@ -278,6 +278,7 @@ p {
     display: flex;
     justify-content: center;
     align-items: center;
+    position: relative;
 }
 
 .profile-img {
@@ -642,13 +643,21 @@ footer {
 
     0%,
     60% {
-        transform: scale(1);
+        transform: scale(1) rotate(0deg);
         opacity: 1;
+        filter: blur(0);
+    }
+
+    63% {
+        transform: scale(0.5) rotate(180deg);
+        opacity: 0.5;
+        filter: blur(4px);
     }
 
     65% {
-        transform: scale(0);
+        transform: scale(0) rotate(360deg);
         opacity: 0;
+        filter: blur(8px);
     }
 
     90% {
@@ -658,13 +667,25 @@ footer {
 
     95% {
         transform: scale(1.1);
-        /* Bounce */
         opacity: 1;
     }
 
     100% {
         transform: scale(1);
+        opacity: 1;
     }
+}
+
+/* Sand Swirl Grains */
+.sand-grain {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: #007bff;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 5;
+    box-shadow: 0 0 5px #007bff;
 }
 
 /* Glow Animation */

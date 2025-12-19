@@ -175,4 +175,56 @@ document.addEventListener('DOMContentLoaded', () => {
         // Start typing after a slight delay to coordinate with fade-in
         setTimeout(typeWriter, 1000);
     }
+
+    // --- Blue Sand Swirl Animation ---
+    function triggerSandSwirl() {
+        const container = document.querySelector('.hero-image-container');
+        if (!container) return;
+
+        // Create particles
+        const particleCount = 60;
+        const containerRect = container.getBoundingClientRect();
+        const centerX = containerRect.width / 2;
+        const centerY = containerRect.height / 2;
+
+        for (let i = 0; i < particleCount; i++) {
+            const grain = document.createElement('div');
+            grain.className = 'sand-grain';
+            container.appendChild(grain);
+
+            // Initial random state
+            const angle = Math.random() * Math.PI * 2;
+            let radius = Math.random() * 30;
+            const speed = 2 + Math.random() * 4;
+            const rotationSpeed = 0.1 + Math.random() * 0.2;
+            let opacity = 1;
+
+            const animate = () => {
+                radius += speed;
+                const currentAngle = angle + (radius * rotationSpeed * 0.1);
+                const x = centerX + Math.cos(currentAngle) * radius;
+                const y = centerY + Math.sin(currentAngle) * radius;
+
+                opacity -= 0.015;
+
+                grain.style.transform = `translate(${x}px, ${y}px) scale(${opacity})`;
+                grain.style.opacity = opacity;
+
+                if (opacity > 0) {
+                    requestAnimationFrame(animate);
+                } else {
+                    grain.remove();
+                }
+            };
+
+            requestAnimationFrame(animate);
+        }
+    }
+
+    // Sync with CSS animation: 10s total, starts collapse at 60% (6s)
+    // We add a tiny offset to ensure it feels perfectly timed with the scale(0)
+    setTimeout(() => {
+        triggerSandSwirl();
+        setInterval(triggerSandSwirl, 10000);
+    }, 6000);
 });
