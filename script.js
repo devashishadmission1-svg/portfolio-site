@@ -25,33 +25,26 @@ window.signup = async () => {
 };
 
 // LOGIN
-const ADMIN_EMAIL = "admin@portfolio.com"; // IMPORTANT: Create a user in Supabase with this email!
-
+// LOGIN
 window.login = async () => {
     const password = document.getElementById("password").value;
 
-    // Using hardcoded email so UI only needs password
-    const { error } = await supabase.auth.signInWithPassword({
-        email: ADMIN_EMAIL,
-        password,
-    });
-
-    if (error) {
-        alert(error.message);
-    } else {
+    if (password === "tylerisreal") {
+        sessionStorage.setItem('isAdmin', 'true');
         window.location.href = "dashboard.html";
+    } else {
+        alert("Access Denied");
     }
 };
 
 // LOGOUT
+// LOGOUT
 window.logout = async () => {
-    await supabase.auth.signOut();
+    sessionStorage.removeItem('isAdmin');
     window.location.href = "index.html";
 };
 
 // PROTECT DASHBOARD PAGE
-supabase.auth.onAuthStateChange((event, session) => {
-    if (!session && window.location.pathname.includes("dashboard")) {
-        window.location.href = "index.html";
-    }
-});
+// PROTECT DASHBOARD PAGE
+// Handled directly in dashboard.html via sessionStorage check
+
