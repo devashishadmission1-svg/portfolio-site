@@ -665,8 +665,8 @@ footer {
 }
 
 .glow-anim:hover {
-    text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #e60073, 0 0 40px #e60073, 0 0 50px #e60073, 0 0 60px #e60073, 0 0 70px #e60073;
-    /* Very bright neon glow */
+    text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #007bff, 0 0 40px #007bff, 0 0 50px #007bff, 0 0 60px #007bff, 0 0 70px #007bff;
+    /* Very bright neon glow - Blue */
     transition: text-shadow 0.3s ease;
 }
 
@@ -710,7 +710,7 @@ footer {
 }
 
 .blog-card {
-    background: rgba(26, 26, 26, 0.4);
+    background: rgba(240, 244, 255, 0.6);
     backdrop-filter: blur(5px);
     padding: var(--spacing-md);
     border: 1px solid var(--border-color);
@@ -720,7 +720,7 @@ footer {
 
 .blog-card:hover {
     transform: translateX(10px);
-    background: rgba(26, 26, 26, 0.6);
+    background: rgba(240, 244, 255, 0.8);
 }
 
 .blog-card .date {
@@ -756,7 +756,7 @@ footer {
 .gallery-item:hover {
     transform: scale(1.02);
     z-index: 10;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 10px 30px rgba(0, 123, 255, 0.1);
 }
 
 @media (max-width: 768px) {
